@@ -8,7 +8,9 @@ You can install Kyan using pip (`pip install kyan`), or by downloading the sourc
 You can start Kyan by running `py -m kyan`.<br>
 In the interface, you'll find numerous controls. A sounds list, 2 volume sliders (one for microphone and the other for sounds), and buttons to play and stop sounds, import or delete audio, and configure audio devices.
 
-In order to use Kyan, you'll need a Virtual Audio Cable (VAC), which you can download [here](https://vb-audio.com/Cable/). Once this is installed, select the VAC using the "Configure Audio Devices" button: ![Select VAC Cable](https://i.imgur.com/XZ5LxLY.png)
+In order to use Kyan, you'll need a Virtual Audio Cable (VAC), which you can download [here](https://vb-audio.com/Cable/). Once this is installed, select the VAC using the "Configure Audio Devices" button:
+
+![Select VAC Cable](https://i.imgur.com/XZ5LxLY.png)
 
 You may need to configure your microphone, however Kyan will use the default microphone on your system by default.
 
