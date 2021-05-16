@@ -2,7 +2,7 @@
 A soundboard program written in python
 
 ## Installation
-You can install Kyan downloading the source and running `pip install --upgrade -e .` in the directory of `setup.py`.
+You can install Kyan with pip by running `pip install kyan`, or by downloading the source and running `pip install --upgrade -e .` in the directory of `setup.py`.
 
 ## Usage
 You can start Kyan by running `py -m kyan`.<br>
