@@ -5,7 +5,7 @@ A soundboard program written in python
 You can install Kyan with pip by running `pip install kyan`, or by downloading the source and running `pip install --upgrade -e .` in the directory of `setup.py`.
 
 ## Usage
-You can start Kyan by running `py -m kyan`.<br>
+You can start Kyan by running `pyw -m kyan`.<br>
 In the interface, you'll find numerous controls. A sounds list, 2 volume sliders (one for microphone and the other for sounds), and buttons to play and stop sounds, import or delete audio, and configure audio devices.
 
 In order to use Kyan, you'll need a Virtual Audio Cable (VAC), which you can download [here](https://vb-audio.com/Cable/). Once this is installed, select the VAC using the "Configure Audio Devices" button:
