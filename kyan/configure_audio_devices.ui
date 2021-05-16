@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Configure Audio Devices</string>
+   <string>Audio Devices</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QComboBox" name="input_device_list">

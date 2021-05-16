@@ -295,12 +295,15 @@ class ImportAudioFileUI(QMainWindow):
                 self.import_audio(add_new_config_entry=False)
 
     def import_audio(self, add_new_config_entry=True):
-        audio_file = AudioSegment.from_file(self.file_path_display.text())
-        audio_file.export(os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files", self.audio_name_box.text() + ".wav"), format="wav")
-        if add_new_config_entry == True:
-            self.parent.config_manager.edit_config(sound=self.audio_name_box.text())
-            self.parent.sounds_list.addItem(self.audio_name_box.text())
-        self.close()
+        try:
+            audio_file = AudioSegment.from_file(self.file_path_display.text())
+            audio_file.export(os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files", self.audio_name_box.text() + ".wav"), format="wav")
+            if add_new_config_entry == True:
+                self.parent.config_manager.edit_config(sound=self.audio_name_box.text())
+                self.parent.sounds_list.addItem(self.audio_name_box.text())
+            self.close()
+        except FileNotFoundError:
+            pass # No audio file was selected
 
 
 class KyanUI(QMainWindow):
@@ -341,6 +344,8 @@ class KyanUI(QMainWindow):
             os.remove(os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files", f"{self.sounds_list.selectedItems()[0].text()}.wav"))
         except FileNotFoundError:
             pass # Sound file was deleted improperly
+        except IndexError:
+            pass # No file was selected
         self.sounds_list.takeItem(self.sounds_list.row(self.sounds_list.currentItem()))
 
     def play_sound(self):
