@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>main_window</class>
- <widget class="QMainWindow" name="main_window">
+ <class>configure_audio_devices</class>
+ <widget class="QMainWindow" name="configure_audio_devices">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -115,11 +115,6 @@
     </property>
    </widget>
   </widget>
-  <action name="action_configure_audio_devices">
-   <property name="text">
-    <string>Configure Audio Devices</string>
-   </property>
-  </action>
  </widget>
  <resources/>
  <connections/>

@@ -278,16 +278,6 @@
     </item>
    </layout>
   </widget>
-  <action name="configure_audio_devices">
-   <property name="text">
-    <string>Configure Audio Devices</string>
-   </property>
-  </action>
-  <action name="import_audio_file">
-   <property name="text">
-    <string>Import Audio File</string>
-   </property>
-  </action>
  </widget>
  <resources/>
  <connections/>

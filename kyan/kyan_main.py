@@ -7,31 +7,9 @@ import threading
 import wave
 from pydub import AudioSegment
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QLabel, QMainWindow, QVBoxLayout
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QMetaObject
-
-
-# Adapted from https://gist.github.com/cpbotha/1b42a20c8f3eb9bb7cb8 (licensed under MIT)
-class UiLoader(QUiLoader):
-    def __init__(self, base_instance):
-        QUiLoader.__init__(self, base_instance)
-        self.base_instance = base_instance
-
-    def createWidget(self, class_name, parent=None, name=''):
-        if parent is None and self.base_instance:
-            return self.base_instance
-        else:
-            widget = QUiLoader.createWidget(self, class_name, parent, name)
-            if self.base_instance:
-                setattr(self.base_instance, name, widget)
-            return widget
-
-def load_ui(ui_file, base_instance=None):
-    loader = UiLoader(base_instance)
-
-    widget = loader.load(ui_file)
-    QMetaObject.connectSlotsByName(widget)
-    return widget
+from kyan.main_ui import Ui_main_window
+from kyan.import_audio_file_ui import Ui_import_audio_file
+from kyan.configure_audio_devices_ui import Ui_configure_audio_devices
 
 
 class AudioHandler:
@@ -158,7 +136,7 @@ class AudioHandler:
             try:
                 data = self.microphone_input_stream.read(self.CHUNK_SIZE)
                 self.cable_output_stream.write(self.change_volume(data, self.mic_volume), self.CHUNK_SIZE)
-                if self.parent.hear_mic_input.isChecked():
+                if self.parent.ui.hear_mic_input.isChecked():
                     self.speaker_output_stream.write(self.change_volume(data, self.mic_volume), self.CHUNK_SIZE)
             except OSError as error:
                 if error == "[Errno -9988] Stream closed":
@@ -181,33 +159,34 @@ class ConfigureAudioDevices(QMainWindow):
         self.parent = parent
 
         super(ConfigureAudioDevices, self).__init__()
-        load_ui(os.path.join(os.path.dirname(os.path.abspath(__file__)), "configure_audio_devices.ui"), self)
+        self.ui = Ui_configure_audio_devices()
+        self.ui.setupUi(self)
 
-        self.refresh_button.clicked.connect(self.populate_device_boxes)
-        self.submit_button.clicked.connect(self.save_config)
+        self.ui.refresh_button.clicked.connect(self.populate_device_boxes)
+        self.ui.submit_button.clicked.connect(self.save_config)
 
     def populate_device_boxes(self):
-        self.input_device_list.clear()
-        self.output_device_list.clear()
+        self.ui.input_device_list.clear()
+        self.ui.output_device_list.clear()
 
         self.devices = self.parent.audio_handler.get_audio_devices()
         for item in self.devices["input"]:
-            self.input_device_list.addItem(item["name"], item["index"])
+            self.ui.input_device_list.addItem(item["name"], item["index"])
         for item in self.devices["output"]:
-            self.output_device_list.addItem(item["name"], item["index"])
+            self.ui.output_device_list.addItem(item["name"], item["index"])
 
         # Set active device if it exists
         config_contents = self.parent.config_manager.get_config()
         if config_contents["selected_devices"]["input"] is not None:
-            selected_input_device_index = self.input_device_list.findData(config_contents["selected_devices"]["input"])
-            self.input_device_list.setCurrentIndex(selected_input_device_index)
+            selected_input_device_index = self.ui.input_device_list.findData(config_contents["selected_devices"]["input"])
+            self.ui.input_device_list.setCurrentIndex(selected_input_device_index)
         if config_contents["selected_devices"]["output"] is not None:
-            selected_output_device_index = self.output_device_list.findData(config_contents["selected_devices"]["output"])
-            self.output_device_list.setCurrentIndex(selected_output_device_index)
+            selected_output_device_index = self.ui.output_device_list.findData(config_contents["selected_devices"]["output"])
+            self.ui.output_device_list.setCurrentIndex(selected_output_device_index)
 
     def save_config(self):
-        selected_input_device_index = self.input_device_list.itemData(self.input_device_list.currentIndex())
-        selected_output_device_index = self.output_device_list.itemData(self.output_device_list.currentIndex())
+        selected_input_device_index = self.ui.input_device_list.itemData(self.ui.input_device_list.currentIndex())
+        selected_output_device_index = self.ui.output_device_list.itemData(self.ui.output_device_list.currentIndex())
         self.parent.audio_handler.update_device_indices(selected_input_device_index, selected_output_device_index)
 
         self.parent.config_manager.edit_config(selected_devices={"input": selected_input_device_index, "output": selected_output_device_index})
@@ -272,35 +251,36 @@ class ImportAudioFileUI(QMainWindow):
         self.parent = parent
 
         super(ImportAudioFileUI, self).__init__()
-        load_ui(os.path.join(os.path.dirname(os.path.abspath(__file__)), "import_audio_file.ui"), self)
+        self.ui = Ui_import_audio_file()
+        self.ui.setupUi(self)
 
-        self.select_file_button.clicked.connect(self.select_file)
-        self.import_button.clicked.connect(self.attempt_audio_import)
+        self.ui.select_file_button.clicked.connect(self.select_file)
+        self.ui.import_button.clicked.connect(self.attempt_audio_import)
 
     def clear_prompts(self):
-        self.file_path_display.setText("")
-        self.audio_name_box.setText("")
+        self.ui.file_path_display.setText("")
+        self.ui.audio_name_box.setText("")
 
     def select_file(self):
         selected_audio_file = QFileDialog.getOpenFileName(filter="Audio Files (*.mp3 *.wav *.ogg)")[:-1][0]
-        self.file_path_display.setText(selected_audio_file)
-        self.audio_name_box.setText(os.path.splitext(os.path.basename(selected_audio_file))[0])
+        self.ui.file_path_display.setText(selected_audio_file)
+        self.ui.audio_name_box.setText(os.path.splitext(os.path.basename(selected_audio_file))[0])
 
     def attempt_audio_import(self):
-        if self.audio_name_box.text() not in self.parent.config_manager.get_config()["sounds"]:
+        if self.ui.audio_name_box.text() not in self.parent.config_manager.get_config()["sounds"]:
             self.import_audio()
         else:
-            error = NameInUseErrorBox(self.audio_name_box.text())
+            error = NameInUseErrorBox(self.ui.audio_name_box.text())
             if error.exec_():
                 self.import_audio(add_new_config_entry=False)
 
     def import_audio(self, add_new_config_entry=True):
         try:
-            audio_file = AudioSegment.from_file(self.file_path_display.text())
-            audio_file.export(os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files", self.audio_name_box.text() + ".wav"), format="wav")
+            audio_file = AudioSegment.from_file(self.ui.file_path_display.text())
+            audio_file.export(os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files", self.ui.audio_name_box.text() + ".wav"), format="wav")
             if add_new_config_entry == True:
-                self.parent.config_manager.edit_config(sound=self.audio_name_box.text())
-                self.parent.sounds_list.addItem(self.audio_name_box.text())
+                self.parent.config_manager.edit_config(sound=self.ui.audio_name_box.text())
+                self.parent.ui.sounds_list.addItem(self.ui.audio_name_box.text())
             self.close()
         except FileNotFoundError:
             pass # No audio file was selected
@@ -319,38 +299,39 @@ class KyanUI(QMainWindow):
         self.import_audio_menu = ImportAudioFileUI(self)
 
         super(KyanUI, self).__init__()
-        load_ui(os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.ui"), self)
+        self.ui = Ui_main_window()
+        self.ui.setupUi(self)
 
-        self.configure_audio_devices.clicked.connect(self.open_cad_ui)
-        self.import_audio_file.clicked.connect(self.open_iaf_ui)
-        self.delete_selected_sound.clicked.connect(self.delete_sound)
-        self.play_selected_sound.clicked.connect(self.play_sound)
-        self.sounds_list.doubleClicked.connect(self.play_sound)
-        self.stop_all_sounds.clicked.connect(self.stop_sounds)
-        self.mic_volume_slider.valueChanged.connect(self.mic_volume_slider_changed)
-        self.sound_volume_slider.valueChanged.connect(self.sound_volume_slider_changed)
-        self.mic_volume_display.valueChanged.connect(self.mic_volume_display_changed)
-        self.sound_volume_display.valueChanged.connect(self.sound_volume_display_changed)
-        self.sounds_list.addItems(self.config_manager.get_config()["sounds"])
+        self.ui.configure_audio_devices.clicked.connect(self.open_cad_ui)
+        self.ui.import_audio_file.clicked.connect(self.open_iaf_ui)
+        self.ui.delete_selected_sound.clicked.connect(self.delete_sound)
+        self.ui.play_selected_sound.clicked.connect(self.play_sound)
+        self.ui.sounds_list.doubleClicked.connect(self.play_sound)
+        self.ui.stop_all_sounds.clicked.connect(self.stop_sounds)
+        self.ui.mic_volume_slider.valueChanged.connect(self.mic_volume_slider_changed)
+        self.ui.sound_volume_slider.valueChanged.connect(self.sound_volume_slider_changed)
+        self.ui.mic_volume_display.valueChanged.connect(self.mic_volume_display_changed)
+        self.ui.sound_volume_display.valueChanged.connect(self.sound_volume_display_changed)
+        self.ui.sounds_list.addItems(self.config_manager.get_config()["sounds"])
 
         self.show()
 
     def delete_sound(self):
         try:
-            self.config_manager.edit_config(sound=self.sounds_list.currentItem().text(), remove_sound=True)
+            self.config_manager.edit_config(sound=self.ui.sounds_list.currentItem().text(), remove_sound=True)
         except AttributeError:
             pass # Sound is not selected
         try:
-            os.remove(os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files", f"{self.sounds_list.selectedItems()[0].text()}.wav"))
+            os.remove(os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files", f"{self.ui.sounds_list.selectedItems()[0].text()}.wav"))
         except FileNotFoundError:
             pass # Sound file was deleted improperly
         except IndexError:
             pass # No file was selected
-        self.sounds_list.takeItem(self.sounds_list.row(self.sounds_list.currentItem()))
+        self.ui.sounds_list.takeItem(self.ui.sounds_list.row(self.ui.sounds_list.currentItem()))
 
     def play_sound(self):
         try:
-            audio_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files", f"{self.sounds_list.selectedItems()[0].text()}.wav")
+            audio_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files", f"{self.ui.sounds_list.selectedItems()[0].text()}.wav")
             sound_thread = threading.Thread(target=self.audio_handler.play_audio, args=[audio_path], daemon=True)
             sound_thread.start()
         except IndexError:
@@ -360,30 +341,30 @@ class KyanUI(QMainWindow):
         self.audio_handler.can_play_audio = False
 
     def mic_volume_slider_changed(self):
-        normalized_value = round(self.mic_volume_slider.value() / 100 + 1, 2)
+        normalized_value = round(self.ui.mic_volume_slider.value() / 100 + 1, 2)
         self.audio_handler.mic_volume = normalized_value
-        self.mic_volume_display.blockSignals(True)
-        self.mic_volume_display.setValue(normalized_value)
-        self.mic_volume_display.blockSignals(False)
+        self.ui.mic_volume_display.blockSignals(True)
+        self.ui.mic_volume_display.setValue(normalized_value)
+        self.ui.mic_volume_display.blockSignals(False)
 
     def sound_volume_slider_changed(self):
-        normalized_value = round(self.sound_volume_slider.value() / 100 + 1, 2)
+        normalized_value = round(self.ui.sound_volume_slider.value() / 100 + 1, 2)
         self.audio_handler.sound_volume = normalized_value
-        self.sound_volume_display.blockSignals(True)
-        self.sound_volume_display.setValue(normalized_value)
-        self.sound_volume_display.blockSignals(False)
+        self.ui.sound_volume_display.blockSignals(True)
+        self.ui.sound_volume_display.setValue(normalized_value)
+        self.ui.sound_volume_display.blockSignals(False)
 
     def mic_volume_display_changed(self):
-        self.audio_handler.mic_volume = self.mic_volume_display.value()
-        self.mic_volume_slider.blockSignals(True)
-        self.mic_volume_slider.setValue(self.mic_volume_display.value() * 100 - 100)
-        self.mic_volume_slider.blockSignals(False)
+        self.audio_handler.mic_volume = self.ui.mic_volume_display.value()
+        self.ui.mic_volume_slider.blockSignals(True)
+        self.ui.mic_volume_slider.setValue(self.ui.mic_volume_display.value() * 100 - 100)
+        self.ui.mic_volume_slider.blockSignals(False)
 
     def sound_volume_display_changed(self):
-        self.audio_handler.sound_volume = self.sound_volume_display.value()
-        self.sound_volume_slider.blockSignals(True)
-        self.sound_volume_slider.setValue(self.sound_volume_display.value() * 100 - 100)
-        self.sound_volume_slider.blockSignals(False)
+        self.audio_handler.sound_volume = self.ui.sound_volume_display.value()
+        self.ui.sound_volume_slider.blockSignals(True)
+        self.ui.sound_volume_slider.setValue(self.ui.sound_volume_display.value() * 100 - 100)
+        self.ui.sound_volume_slider.blockSignals(False)
 
     def open_cad_ui(self):
         self.configure_menu.populate_device_boxes()
